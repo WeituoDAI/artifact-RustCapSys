@@ -1,18 +1,4 @@
-(* From iris.proofmode Require Import proofmode.  *)
-(* From lrust.typing Require Import typing. *)
-(* From iris.prelude Require Import options. *)
-
-
-
 From lrust.lang Require Export notation.
-(* From lrust.lang Require Export lang. *)
-(* From iris.prelude Require Import options. *)
-(* 
- From lrust.typing Require Export
-  lft_contexts type_context cont_context programs cont type
-  int bool own uniq_bor shr_bor uninit product sum fixpoint function
-  product_split borrow type_sum.  *)
-(* From iris.prelude Require Import options.  *)
 From Stdlib Require Import PropExtensionalityFacts.
 Inductive lft : Type :=
 | static 
@@ -356,7 +342,7 @@ Fixpoint hasty_ptr_offsets (p : path) (ptr: type → type) tyl (off : nat) : tct
   match tyl with
   | [] => []
   | ty :: tyl =>
-    (p +ₗ #off ◁ ptr ty) :: hasty_ptr_offsets p ptr tyl (off + (my_type_system_v23.size ty))
+    (p +ₗ #off ◁ ptr ty) :: hasty_ptr_offsets p ptr tyl (off + (my_type_system.size ty))
   end.
 
 Inductive safe_tctx_incl : elctx -> llctx -> tctx -> tctx -> Prop :=
@@ -571,7 +557,7 @@ Notation "'fnrec:' f xl := e" := (rec: f (BNamed "return"::xl) := e)%V
 Notation "'fn:' xl := e" := (fnrec: <> xl := e)%V
   (at level 102, xl at level 1, e at level 200).  *)
 
-Definition box ty := own_ptr (my_type_system_v23.size ty) ty.
+Definition box ty := own_ptr (my_type_system.size ty) ty.
 
 (*  Lemma a: forall argsb e a, ((locked (RecV <>%binder (BNamed "return"::argsb)%binder e%E))) = a.
 intros.
@@ -623,10 +609,10 @@ Inductive safe_type_Ins : elctx -> llctx -> tctx -> expr -> (val -> tctx) -> Pro
                          let n' := Z.to_nat n in
                           safe_type_Ins E L [] (new [ #n ]%E) (λ v : val,[v ◁ own_ptr n' (uninit n')])
  | type_delete_instr : forall E L ty n p ,
-   (*S-DELETE*)        Z.of_nat (my_type_system_v23.size ty) = n ->
-                       safe_type_Ins E L [p ◁ own_ptr (my_type_system_v23.size ty) ty] (delete [ #n; p])%E (λ _, []) 
+   (*S-DELETE*)        Z.of_nat (my_type_system.size ty) = n ->
+                       safe_type_Ins E L [p ◁ own_ptr (my_type_system.size ty) ty] (delete [ #n; p])%E (λ _, []) 
  | type_deref_instr_type : forall E L ty ty1 ty1' p, 
-   (*S-DEREF*)         my_type_system_v23.size ty = 1%nat ->
+   (*S-DEREF*)         my_type_system.size ty = 1%nat ->
                        safe_wr Read' E L ty1 ty ty1' ->
                        safe_type_Ins E L [p ◁ ty1] (!p) (λ v, [p ◁ ty1'; v ◁ ty])
  | type_assign_instr_type : forall E L ty1 ty ty1' p1 p2 , 
@@ -669,9 +655,9 @@ Inductive safe_type_Ins : elctx -> llctx -> tctx -> expr -> (val -> tctx) -> Pro
                                (* (forall T, safe_type_Ins E L T p1 (λ v : val, [v ◁ ty1])) ->
                                (forall T, safe_type_Ins E L T p2 (λ v : val, [v ◁ ty2])) -> *)
                                safe_type_Ins E L [p1 ◁ ty1; p2 ◁ ty2]
-                                    (p1 <-{(my_type_system_v23.size ty),Σ i} !p2) (λ _, [p1 ◁ ty1'; p2 ◁ ty2'])
+                                    (p1 <-{(my_type_system.size ty),Σ i} !p2) (λ _, [p1 ◁ ty1'; p2 ◁ ty2'])
  | type_memcpy_instr_safe : forall E L ty ty1 ty1' ty2 ty2' (n : Z) p1 p2 ,
-   (*S_MEMCPY*)                            Z.of_nat ((my_type_system_v23.size ty)) = n →
+   (*S_MEMCPY*)                            Z.of_nat ((my_type_system.size ty)) = n →
                                safe_wr Write' E L ty1 ty ty1'->
                                safe_wr Read' E L ty2 ty ty2'->
                               (*  (exists T, safe_type_Ins E L T p1 (λ v : val, [v ◁ ty1])) ->
@@ -726,8 +712,8 @@ Inductive safe_type_Ins : elctx -> llctx -> tctx -> expr -> (val -> tctx) -> Pro
  | type_case_own' : forall E L C T T1 T2 p n tyl el ,
    (*F_CASE_OWN*) Forall2 (λ ty e,
                   (safe_type_fun E L C ((p +ₗ #0 ◁ own_ptr n (uninit 1)) :: (p +ₗ #1 ◁ own_ptr n ty) ::
-         (p +ₗ #(S (my_type_system_v23.size ty)) ◁
-            own_ptr n (uninit (max_list_with my_type_system_v23.size tyl - (my_type_system_v23.size ty)))) :: T) e T1) ∨
+         (p +ₗ #(S (my_type_system.size ty)) ◁
+            own_ptr n (uninit (max_list_with my_type_system.size tyl - (my_type_system.size ty)))) :: T) e T1) ∨
       (safe_type_fun E L C ((p ◁ own_ptr n (sum tyl)) :: T) e T2))
       tyl el ->
     safe_type_fun E L C ((p ◁ own_ptr n (sum tyl)) :: T) (case: !p of el) ((p ◁ own_ptr n (sum tyl)) :: T)
@@ -926,7 +912,7 @@ Qed.
 Definition lft_beq (t : lft) (t' : lft) : Datatypes.bool :=
 match t, t' with
 | static, static => true
-| my_type_system_v23.const n, my_type_system_v23.const n'=> bool_decide (n = n') 
+| my_type_system.const n, my_type_system.const n'=> bool_decide (n = n') 
 | _, _ => false
 end
 .
@@ -1406,7 +1392,7 @@ Ltac is_closed_solver := repeat progress is_closed_solver'.
     eapply is_closed_of_val.
     eapply andb_prop_intro. split;eauto. 
     eapply is_closed_of_val.
-    assert(1%nat = my_type_system_v23.size int). eauto.
+    assert(1%nat = my_type_system.size int). eauto.
     rewrite H0. eapply type_delete_instr.
     eauto. simpl.
     intros.
@@ -1427,7 +1413,7 @@ Ltac is_closed_solver := repeat progress is_closed_solver'.
     eapply is_closed_of_val.
     eapply andb_prop_intro. split;eauto. 
     eapply is_closed_of_val.
-    assert(1%nat = my_type_system_v23.size int). eauto.
+    assert(1%nat = my_type_system.size int). eauto.
     rewrite H0. eapply type_delete_instr.
     eauto.
     intros. simpl_subst.
@@ -1594,7 +1580,7 @@ Qed.
 
 Definition read_instruction I p (T1:tctx) (T2:tctx) : Prop := 
        (I = (!p) (* \/ 
-             (exists p1 ty i, I = (p1 <-{(my_type_system_v23.size ty),Σ i} !p)) \/
+             (exists p1 ty i, I = (p1 <-{(my_type_system.size ty),Σ i} !p)) \/
              exists p1 n , I = (p1 <-{n} !p) *)) 
              /\ exists tctx_elt tctx_elt' tctx_elt'' n1 n2 (* κ *) ty v, 
                     ((tctx_elt = (p ◁ own_ptr n1 (own_ptr n2 ty)) (* \/ tctx_elt = (p ◁{ κ }  own_ptr n1 (own_ptr n2 ty)) *))
@@ -1851,7 +1837,7 @@ Proof.
        exists (p
           ◁ own_ptr n
               (uninit
-                 (my_type_system_v23.size (own_ptr n' a)))).
+                 (my_type_system.size (own_ptr n' a)))).
        exists n. exists n'. exists a. exists v.
        split; auto.
        split.
@@ -3055,7 +3041,7 @@ match ty2 with
                        end
 (* | product2 ty11 ty12 => match ty1 with
                        | product2 ty21 ty22 => ty11 = ty21 /\ ty12 = ty22 \/capability_not_add_subtyping ty21 ty11 /\ capability_not_add_subtyping ty22 ty12 
-                       | (uninit n) => True(* capability_not_add_subtyping (uninit (my_type_system_v23.size ty11)) ty11 /\ capability_not_add_subtyping (uninit (n-(my_type_system_v23.size ty11))) ty12 \/ exists E L ty3',safe_subtyping E L ty1 ty3' /\ safe_subtyping E L ty3' ty2 *)
+                       | (uninit n) => True(* capability_not_add_subtyping (uninit (my_type_system.size ty11)) ty11 /\ capability_not_add_subtyping (uninit (n-(my_type_system.size ty11))) ty12 \/ exists E L ty3',safe_subtyping E L ty1 ty3' /\ safe_subtyping E L ty3' ty2 *)
                        | _ => False
                        end *)
 | _=> True
@@ -3336,7 +3322,7 @@ match T1 with
                   else (0%nat + get_p_own_uniq_size_in_tctx p T1')%nat
             | TCtx_hasty p' (uniq_bor k ty) => 
                   if expr_beq (get_OffsetOp_left_min p') p 
-                  then (my_type_system_v23.size ty + get_p_own_size_in_tctx p T1')%nat
+                  then (my_type_system.size ty + get_p_own_size_in_tctx p T1')%nat
                   else (0 + get_p_own_uniq_size_in_tctx p T1')%nat
             | _ => 0 + get_p_own_size_in_tctx p T1'
             end
@@ -6025,7 +6011,7 @@ Definition write_expr_check e p1 p2:=
               \/ (exists i, e = (p1 <-{Σ i} ()))
               \/ (exists i ty, e = (p1 <- #i ;; 
                                       p1 +ₗ #1 <-{
-                                      my_type_system_v23.size ty} !p2))
+                                      my_type_system.size ty} !p2))
               \/ exists n, e = (p1 <-{n} !p2)
               
 .
@@ -6215,7 +6201,7 @@ Proof.
 Qed.
 
 Definition read_expr_check e p2:= 
-     e = !p2 \/ (exists p1 ty i, e = (p1 <-{(my_type_system_v23.size ty),Σ i} !p2))
+     e = !p2 \/ (exists p1 ty i, e = (p1 <-{(my_type_system.size ty),Σ i} !p2))
              \/ (exists n p1, e = (p1 <-{n} !p2)).
 
 Lemma Ins_read_capbility_check : 
