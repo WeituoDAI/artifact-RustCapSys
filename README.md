@@ -1,6 +1,3 @@
-# README
-
-
 ## rust-capability-type-system
 
 Formalization of the Rust capability type system
