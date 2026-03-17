@@ -13,13 +13,11 @@ From lrust.lang Require Export notation.
   int bool own uniq_bor shr_bor uninit product sum fixpoint function
   product_split borrow type_sum.  *)
 (* From iris.prelude Require Import options.  *)
-From Coq Require Import PropExtensionalityFacts.
-
-
-
+From Stdlib Require Import PropExtensionalityFacts.
 Inductive lft : Type :=
 | static 
 | const : positive -> lft.
+
 
 
 
@@ -68,7 +66,7 @@ match ty with
 | unit0 => 0
 end.
 
-Compute (size(Π [int;int;uninit 3])).
+(*Compute (size(Π [int;int;uninit 3])).*)
 
 
 Definition path := expr.
@@ -318,8 +316,8 @@ Inductive safe_subtyping : elctx -> llctx -> type -> type -> Prop :=
                    safe_subtyping E L (sum tyl1) (sum tyl2)
 .
 
-From Coq Require Import Logic.
-From Coq Require Import Logic.Classical.
+From Stdlib Require Import Logic.
+From Stdlib Require Import Logic.Classical.
 
 Lemma uniq_mono : forall E L ty1 ty2 κ1 κ2,
  (*T_BOR_MUT*)     safe_lifetime_lincl E L κ2 κ1 ->  
@@ -1292,7 +1290,7 @@ Ltac is_closed_solver := repeat progress is_closed_solver'.
     y ◁ own_ptr 1 int;x ◁ own_ptr 1 int]).
       simpl.
      eapply Permutation_submseteq.
-     Search (_ ≡ₚ _).
+     (* Search (_ ≡ₚ _). *)
      assert([x' ◁ int; y' ◁ int; r ◁ own_ptr (Z.to_nat 1) (uninit (Z.to_nat 1));
  y ◁ own_ptr 1 int; x ◁ own_ptr 1 int] ≡ₚ [ r ◁ own_ptr (Z.to_nat 1) (uninit (Z.to_nat 1));
  x' ◁ int; y' ◁ int; y ◁ own_ptr 1 int; x ◁ own_ptr 1 int]).
@@ -1435,12 +1433,12 @@ Ltac is_closed_solver := repeat progress is_closed_solver'.
     intros. simpl_subst.
     instantiate(1:= λ v ,[r ◁ own_ptr (Z.to_nat 1) int]). simpl.
     eapply type_jump.
-    Search (Forall2 ).
+    (* Search (Forall2 ). *)
     instantiate (1:= [r] ). eapply List.Forall2_cons.
     right. auto.
-        Search (Forall2 ).
-    eapply Forall2_refl.
-    Search ( _  -> _ ∈ _).
+        (* Search (Forall2 ). *)
+    eapply List.Forall2_nil.
+    (* Search ( _  -> _ ∈ _). *)
     eapply head_Some_elem_of. simpl. eauto.
     simpl. eapply subtype_tctx_incl. unfold box.
     simpl. change(Z.to_nat 1) with 1%nat.
@@ -1456,7 +1454,7 @@ Definition list_add_own (x:tctx_elt) (lst : list tctx_elt):=
                              \/ (exists (p:path) (k:lft) (t:type) n a,x = TCtx_blocked p k t /\ t = own_ptr n a /\ path_not_in_tctx p lst))
 .
 
-Compute(path_not_in_tctx "p" ["p" ◁ int; "c" ◁ int]).
+(*Compute(path_not_in_tctx "p" ["p" ◁ int; "c" ◁ int]).*)
 (* (exists p ty, tctx_elt = (p ◁ ty) /\ path_not_in_tctx p T1)
  *)
 (* 
@@ -1503,12 +1501,13 @@ match T with
           end
 end.
 
+(*
 Compute member_of_own_in_tctx(["p" ◁ (own_ptr 1 (own_ptr 1 (own_ptr 1 (own_ptr 1 int)))); "p" ◁ own_ptr 1 int
 ; "p" ◁ int ; "p" ◁ (own_ptr 1 (own_ptr 1 int))]    
   ).
 
 Compute member_of_own_in_type((own_ptr 1 (own_ptr 1 (own_ptr 1 (own_ptr 1 int))))).
-
+*)
 
 Definition own_add T1 T2: Prop := 
   member_of_own_in_tctx T1 < member_of_own_in_tctx T2.
@@ -1516,10 +1515,10 @@ Definition own_add T1 T2: Prop :=
 Definition own_add' T1 T2: Prop := 
   member_of_own_in_tctx' T1 < member_of_own_in_tctx' T2.
 
-Require Import Arith.PeanoNat.
-Require Import Lia.
-Search (_ = 0%nat).
-Print Nat.eq_0_gt_0_cases.
+From Stdlib Require Import Arith.PeanoNat.
+From Stdlib Require Import Lia.
+(*Search (_ = 0%nat).
+Print Nat.eq_0_gt_0_cases.*)
 
 Lemma Ins_own_not_add : forall E L I T1 (T2:val → tctx) v T2',
               safe_type_Ins  E L T1 I T2  ->
@@ -1855,12 +1854,12 @@ Proof.
                  (my_type_system_v23.size (own_ptr n' a)))).
        exists n. exists n'. exists a. exists v.
        split; auto.
-       split. 
-       eapply elem_of_list_singleton. auto.
+       split.
+       eapply list_elem_of_singleton. auto.
        split. auto.
        split.
        simpl. auto.
-       eapply elem_of_list_In.
+       eapply list_elem_of_In.
        eapply in_cons.
        eapply in_eq.
         
@@ -1873,8 +1872,8 @@ Proof.
     inversion H2.
     subst.
     destruct H1.
-    eapply elem_of_list_In in H1.
-    eapply elem_of_list_singleton in H1.
+    eapply list_elem_of_In in H1.
+    eapply list_elem_of_singleton in H1.
     subst.
     unfold list_add_own in H3.
     destruct H3.
@@ -1885,8 +1884,8 @@ Proof.
     rewrite expr_eq in H5. exfalso. auto.
     do 5 destruct H3. destruct H3. tryfalse.
     destruct H1.
-    eapply elem_of_list_In in H1.
-    eapply elem_of_list_singleton in H1.
+    eapply list_elem_of_In in H1.
+    eapply list_elem_of_singleton in H1.
     subst.
     unfold list_add_own in H3.
     destruct H3.
@@ -1898,8 +1897,8 @@ Proof.
     subst.
     inversion H3. subst.
     destruct H1.
-    eapply elem_of_list_In in H1.
-    eapply elem_of_list_singleton in H1.
+    eapply list_elem_of_In in H1.
+    eapply list_elem_of_singleton in H1.
     subst.
     unfold list_add_own in H4.
     destruct H4.
@@ -1910,8 +1909,8 @@ Proof.
     rewrite expr_eq in H6. exfalso. auto.
     do 5 destruct H4. destruct H4. tryfalse.
     destruct H1.
-    eapply elem_of_list_In in H1.
-    eapply elem_of_list_singleton in H1.
+    eapply list_elem_of_In in H1.
+    eapply list_elem_of_singleton in H1.
     subst.
     unfold list_add_own in H4.
     destruct H4.
@@ -1922,8 +1921,8 @@ Proof.
   {
     subst.
     destruct H1.
-    eapply elem_of_list_In in H0.
-    eapply elem_of_list_singleton in H0.
+    eapply list_elem_of_In in H0.
+    eapply list_elem_of_singleton in H0.
     subst.
     unfold list_add_own in H1.
     destruct H1.
@@ -1936,8 +1935,8 @@ Proof.
   {
     subst.
     destruct H1.
-    eapply elem_of_list_In in H0.
-    eapply elem_of_list_singleton in H0.
+    eapply list_elem_of_In in H0.
+    eapply list_elem_of_singleton in H0.
     subst.
     unfold list_add_own in H1.
     destruct H1.
@@ -1950,8 +1949,8 @@ Proof.
   {
     subst.
     destruct H1.
-    eapply elem_of_list_In in H0.
-    eapply elem_of_list_singleton in H0.
+    eapply list_elem_of_In in H0.
+    eapply list_elem_of_singleton in H0.
     subst.
     unfold list_add_own in H1.
     destruct H1.
@@ -1964,8 +1963,8 @@ Proof.
   {
     subst.
     destruct H1.
-    eapply elem_of_list_In in H0.
-    eapply elem_of_list_singleton in H0.
+    eapply list_elem_of_In in H0.
+    eapply list_elem_of_singleton in H0.
     subst.
     unfold list_add_own in H1.
     destruct H1.
@@ -1978,8 +1977,8 @@ Proof.
   {
     subst.
     destruct H1.
-    eapply elem_of_list_In in H0.
-    eapply elem_of_list_singleton in H0.
+    eapply list_elem_of_In in H0.
+    eapply list_elem_of_singleton in H0.
     subst.
     unfold list_add_own in H1.
     destruct H1.
@@ -1993,8 +1992,8 @@ Proof.
     inversion H3.
     subst;
     destruct H1;
-    eapply elem_of_list_In in H0;
-    eapply elem_of_list_singleton in H0;
+    eapply list_elem_of_In in H0;
+    eapply list_elem_of_singleton in H0;
     subst;
     destruct H1.
     destruct H1.
@@ -2005,8 +2004,8 @@ Proof.
     do 6 destruct H1. tryfalse.
     subst.
     destruct H1;
-    eapply elem_of_list_In in H0;
-    eapply elem_of_list_singleton in H0.
+    eapply list_elem_of_In in H0;
+    eapply list_elem_of_singleton in H0.
     subst.
     unfold list_add_own in H1.
     destruct H1.
@@ -2029,12 +2028,12 @@ Proof.
           rewrite expr_eq in H6. exfalso. auto.
           do 6 destruct H5. tryfalse.
         * 
-          eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+          eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst.
           unfold list_add_own in H5.
           destruct H5.
-          Search (~ In _ _).
+          (* Search (~ In _ _). *)
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
       - subst.
@@ -2043,8 +2042,8 @@ Proof.
         destruct H1.
         * subst. unfold list_add_own in H5. destruct H5.
           eapply not_in_cons in H1. destruct H1. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
@@ -2057,8 +2056,8 @@ Proof.
           injection H5 as Hpeq. destruct H6; subst.
           simpl in H7. rewrite expr_eq in H7. exfalso. auto.
           destruct H5. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           do 6 destruct H5. subst.
           injection H5 as Hpeq. destruct H6; subst.
@@ -2070,8 +2069,8 @@ Proof.
         destruct H1.
         * subst. unfold list_add_own in H5. destruct H5.
           eapply not_in_cons in H1. destruct H1. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           do 6 destruct H5. subst.
           injection H5 as Hpeq. destruct H6; subst.
@@ -2087,8 +2086,8 @@ Proof.
           injection H5 as Hpeq. destruct H6; subst.
           simpl in H7. rewrite expr_eq in H7. exfalso. auto.
           destruct H5. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
@@ -2099,8 +2098,8 @@ Proof.
           do 6 destruct H5. subst.
           eapply not_in_cons in H1. destruct H1. tryfalse.
           destruct H5; tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
@@ -2113,8 +2112,8 @@ Proof.
           injection H5 as Hpeq. destruct H6; subst.
           simpl in H7. rewrite expr_eq in H7. exfalso. auto.
           destruct H5. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
@@ -2125,8 +2124,8 @@ Proof.
           do 6 destruct H5. subst.
           eapply not_in_cons in H1. destruct H1. tryfalse.
           destruct H5; tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
@@ -2143,8 +2142,8 @@ Proof.
           injection H5 as Hpeq. destruct H6; subst.
           simpl in H7. rewrite expr_eq in H7. exfalso. auto.
           destruct H5. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
@@ -2155,8 +2154,8 @@ Proof.
           do 6 destruct H5. subst.
           eapply not_in_cons in H1. destruct H1. tryfalse.
           destruct H5; tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H5.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H6. destruct H6. tryfalse.
@@ -2169,8 +2168,8 @@ Proof.
           injection H2 as Hpeq. destruct H5; subst.
           simpl in H6. rewrite expr_eq in H6. exfalso. auto.
           destruct H2. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. do 7 destruct H2. subst.
           injection H2 as Hpeq. destruct H5; subst.
           simpl in H6. rewrite expr_eq in H6. exfalso. destruct (expr_beq x p1); auto.
@@ -2183,8 +2182,8 @@ Proof.
           do 6 destruct H2. subst.
           eapply not_in_cons in H1. destruct H1. tryfalse.
           destruct H2; tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. do 7 destruct H2. subst.
           injection H2 as Hpeq. destruct H5; subst.
           simpl in H6. rewrite expr_eq in H6. exfalso. destruct (expr_beq x p1); auto.
@@ -2199,8 +2198,8 @@ Proof.
           injection H6 as Hpeq. destruct H7; subst.
           simpl in H8. rewrite expr_eq in H8. exfalso. auto.
           destruct H6. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H6.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H7. destruct H7. tryfalse.
@@ -2211,8 +2210,8 @@ Proof.
           do 6 destruct H6. subst.
           eapply not_in_cons in H1. destruct H1. tryfalse.
           destruct H6; tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H6.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H7. destruct H7. tryfalse.
@@ -2225,8 +2224,8 @@ Proof.
           injection H6 as Hpeq. destruct H7; subst.
           simpl in H8. rewrite expr_eq in H8. exfalso. auto.
           destruct H6. tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H6.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H7. destruct H7. tryfalse.
@@ -2237,8 +2236,8 @@ Proof.
           do 6 destruct H6. subst.
           eapply not_in_cons in H1. destruct H1. tryfalse.
           destruct H6; tryfalse.
-        * eapply elem_of_list_In in H1;
-          eapply elem_of_list_singleton in H1.
+        * eapply list_elem_of_In in H1;
+          eapply list_elem_of_singleton in H1.
           subst. destruct H6.
           eapply not_in_cons in H1. destruct H1.
           eapply not_in_cons in H7. destruct H7. tryfalse.
@@ -2371,12 +2370,12 @@ Proof.
     split;eauto.
     do 7 eexists.
     split;eauto. split.
-    eapply elem_of_list_singleton. eauto.
+    eapply list_elem_of_singleton. eauto.
     split;eauto.
     split;eauto.
     split. 
-    eapply elem_of_list_In. simpl. left. eauto.
-    eapply elem_of_list_In. eapply in_cons.
+    eapply list_elem_of_In. simpl. left. eauto.
+    eapply list_elem_of_In. eapply in_cons.
     eapply in_eq.
     simpl in H1. exfalso. eauto.
 
@@ -2774,9 +2773,9 @@ Proof.
     split.
     left. eauto.
     split.
-    eapply elem_of_list_singleton. eauto.
+    eapply list_elem_of_singleton. eauto.
     split;eauto.
-    eapply elem_of_list_In. simpl. 
+    eapply list_elem_of_In. simpl. 
     right. left. eauto.
 
     eapply in_inv in H1. destruct H1.
@@ -2792,9 +2791,9 @@ Proof.
     do 7 eexists.
     split. left. eauto.
     split.
-    eapply elem_of_list_singleton. eauto.
+    eapply list_elem_of_singleton. eauto.
     split. eauto.
-    eapply elem_of_list_In. eapply in_cons.
+    eapply list_elem_of_In. eapply in_cons.
     simpl. left. eauto.
     eapply in_inv in H1.
     destruct H1. injection H1 as eq;subst.
@@ -2813,9 +2812,9 @@ Proof.
     do 7 eexists.
     split. right. right. eauto.
     split;eauto.
-    eapply elem_of_list_singleton. eauto.
+    eapply list_elem_of_singleton. eauto.
     split;eauto.
-    eapply elem_of_list_In. eapply in_cons.
+    eapply list_elem_of_In. eapply in_cons.
     simpl. left. eauto.
 
     eapply in_inv in H1. destruct H1.
@@ -2831,9 +2830,9 @@ Proof.
     do 7 eexists.
     split. right. left. eauto.
     split.
-    eapply elem_of_list_singleton. eauto.
+    eapply list_elem_of_singleton. eauto.
     split. eauto.
-    eapply elem_of_list_In. eapply in_cons.
+    eapply list_elem_of_In. eapply in_cons.
     simpl. left. eauto.
 
   - inversion H0;subst.
@@ -3174,9 +3173,9 @@ match ty2 with
 | _ => False
 end
 .
-
+(*
 Compute(product (int::bool::nil) ). 
-
+*)
 Fixpoint capability_not_add_subtyping3 (ty1 ty2 :type)  : Prop :=
 match ty1, ty2 with
 | (own_ptr n ty1'), (own_ptr n' ty2') => ((own_ptr n ty1') = (own_ptr n' ty2') \/ capability_not_add_subtyping3 ty1' ty2' (* \/ exists E L ty3',safe_subtyping E L ty1 ty3' /\ safe_subtyping E L ty3' ty2 *) )
@@ -3261,7 +3260,8 @@ Proof.
   induction p; try( simpl in H; destruct H; tryfalse; exfalso;eapply H).
   destruct op; try( simpl in H; destruct H; tryfalse; exfalso;eapply H).
   simpl in H. destruct H. eapply expr_beq_correct in H. simpl in H.
-  Search (expr_beq). eapply andb_prop_elim in H.
+  (* Search (expr_beq). *)
+  eapply andb_prop_elim in H.
   destruct H. eapply expr_beq_correct in H. eapply expr_beq_correct in H0.
   simpl. right. left. auto. destruct H. subst.
   simpl. right. right. right. left. auto.
@@ -3271,7 +3271,8 @@ Proof.
   induction p; try( simpl in H; destruct H; tryfalse; exfalso;eapply H).
   destruct op; try( simpl in H; destruct H; tryfalse; exfalso;eapply H).
   simpl in H. destruct H. eapply expr_beq_correct in H. simpl in H.
-  Search (expr_beq). eapply andb_prop_elim in H.
+  (* Search (expr_beq). *)
+  eapply andb_prop_elim in H.
   destruct H. eapply expr_beq_correct in H. eapply expr_beq_correct in H1.
   simpl. right. left. auto. destruct H. subst.
   simpl. right. right. right. left. auto.
@@ -3958,8 +3959,8 @@ Proof.
 Qed.
 
   
-From Coq Require Import Logic.
-From Coq Require Import Logic.Classical.
+From Stdlib Require Import Logic.
+From Stdlib Require Import Logic.Classical.
 
 Lemma safe_subtyping_unit0: forall ty E L , 
  safe_subtyping E L unit0 ty -> ty ≠ unit0 -> False.
@@ -4154,7 +4155,7 @@ Proof.
     left.
     do 3 eexists. split; eauto.
     split; eauto.  
-    eapply elem_of_list_In. eapply elem_of_list_singleton.
+    eapply list_elem_of_In. eapply list_elem_of_singleton.
     eapply safe_subtyping_own_size_eq in H3. subst. eauto.
     eapply safe_subtyping_capability_not_add2 in H3.
     destruct H3. injection H as eq;subst. destruct ty;simpl;auto.
@@ -4169,7 +4170,7 @@ Proof.
     subst. injection H1 as eq. subst.
     right. left.
     do 4 eexists. eauto. split; eauto.
-    eapply elem_of_list_In. eapply elem_of_list_singleton. auto.
+    eapply list_elem_of_In. eapply list_elem_of_singleton. auto.
     eapply safe_subtyping_capability_not_add2 in H3.
     simpl in H3. destruct H3. subst. destruct ty;simpl;auto.
     eauto.
@@ -4251,8 +4252,8 @@ Proof.
     apply in_inv in H2; destruct H2.  subst. (* left. *) 
     left.
     exists ty. exists (p ◁ own_ptr n ty). 
-    split. auto. split. auto. rewrite H. eapply elem_of_list_In.
-    eapply elem_of_list_here. 
+    split. auto. split. auto. rewrite H. eapply list_elem_of_In.
+    eapply list_elem_of_here. 
     destruct ty;simpl; eauto. eauto.
     split.  
     generalize dependent T2. induction T1.  intros. 
@@ -4269,8 +4270,8 @@ Proof.
     apply in_inv in H2; destruct H2.  subst.
     right. left.
     exists k. exists ty. exists (p ◁ &uniq{k} ty). 
-    split. auto. split. rewrite H. eapply elem_of_list_In.
-    eapply elem_of_list_here.
+    split. auto. split. rewrite H. eapply list_elem_of_In.
+    eapply list_elem_of_here.
     destruct ty; simpl ; auto.
     eauto.
     split.  
@@ -4288,8 +4289,8 @@ Proof.
     apply in_inv in H2; destruct H2.  subst.
     right.
     exists ty. exists k. 
-    split. rewrite H. eapply elem_of_list_In.
-    eapply elem_of_list_here.
+    split. rewrite H. eapply list_elem_of_In.
+    eapply list_elem_of_here.
     destruct ty; simpl ; auto.
     eauto.
     split.
@@ -4307,8 +4308,8 @@ Proof.
     apply in_inv in H2; destruct H2.  subst.
     right. right. left.
     exists ty. exists k. exists n. 
-    split. rewrite H. eapply elem_of_list_In.
-    eapply elem_of_list_here.
+    split. rewrite H. eapply list_elem_of_In.
+    eapply list_elem_of_here.
     destruct ty; simpl ; auto.
     eauto.
     split. 
@@ -4327,8 +4328,8 @@ Proof.
     apply in_inv in H2; destruct H2.  subst.
     left.
     exists k. exists ty. eexists. 
-    split. eauto. split. rewrite H. eapply elem_of_list_In.
-    eapply elem_of_list_here.
+    split. eauto. split. rewrite H. eapply list_elem_of_In.
+    eapply list_elem_of_here.
     destruct ty; simpl ; auto.
     eapply H1; eauto.
     generalize dependent T2. induction T1.  intros.
@@ -4346,8 +4347,8 @@ Proof.
     apply in_inv in H2; destruct H2.  subst.
     right. left.
     exists k. exists k'''. exists ty. eexists. 
-    split. eauto. split. rewrite H. eapply elem_of_list_In.
-    eapply elem_of_list_here.
+    split. eauto. split. rewrite H. eapply list_elem_of_In.
+    eapply list_elem_of_here.
     destruct ty; simpl ; auto.
     eapply H1; eauto.
 
@@ -4390,7 +4391,7 @@ Proof.
     unfold capability_not_add_part2. intros. left.
     eapply in_inv in H; destruct H. subst. injection H0 as eq; subst.
     do 4 eexists. split; eauto. split.  
-    eapply elem_of_list_In. eapply elem_of_list_singleton. auto.
+    eapply list_elem_of_In. eapply list_elem_of_singleton. auto.
     destruct ty0;simpl ;auto.
     eapply in_inv in H; destruct H. subst. tryfalse.
     assert(Hnil:~In tctx_elt0 []) by eapply in_nil. tryfalse.
@@ -4399,7 +4400,7 @@ Proof.
     eapply in_inv in H. destruct H. subst; tryfalse.
     left. injection H0 as eq;subst.
     do 3 eexists. eauto. split.
-    eapply elem_of_list_In. eapply elem_of_list_singleton. auto.
+    eapply list_elem_of_In. eapply list_elem_of_singleton. auto.
     destruct ty0;simpl ;auto.
     assert(Hnil:~In tctx_elt0 []) by eapply in_nil. tryfalse.
      split.
@@ -4426,7 +4427,7 @@ Proof.
     unfold capability_not_add_part2. intros. right. left.
     eapply in_inv in H0. destruct H0. subst. injection H1 as eq;subst.
     exists κ. exists ty0. eexists. split; eauto.
-    split; eauto. eapply elem_of_list_In. eapply elem_of_list_singleton. auto.
+    split; eauto. eapply list_elem_of_In. eapply list_elem_of_singleton. auto.
     destruct ty0;simpl;auto.
     eapply in_inv in H0. destruct H0. subst. tryfalse.
     assert(Hnil:~In tctx_elt0 []) by eapply in_nil. tryfalse.
@@ -4442,7 +4443,7 @@ Proof.
     eapply in_inv in H0. destruct H0. subst; tryfalse.
     injection H1 as eq;subst.
     left. do 4 eexists. eauto.
-    split. eapply elem_of_list_In. eapply elem_of_list_singleton. auto.
+    split. eapply list_elem_of_In. eapply list_elem_of_singleton. auto.
     destruct ty0;simpl;auto.
     simpl in H0. exfalso. auto.
     split.
@@ -5514,9 +5515,9 @@ Proof.
   induction T1.
   simpl. eauto.
   simpl. destruct a.
-  rewrite  <- NPeano.Nat.add_assoc. 
+  rewrite  <- Nat.add_assoc. 
   rewrite Nat.add_cancel_l. eauto.
-  rewrite  <- NPeano.Nat.add_assoc. 
+  rewrite  <- Nat.add_assoc. 
   rewrite Nat.add_cancel_l. eauto.
 Qed.
 
@@ -5672,7 +5673,7 @@ intros.
    unfold capability_tran in *.
    simpljoin1.
    split. 
-   rewrite app_length. rewrite app_length.
+   rewrite length_app. rewrite length_app.
    rewrite H. eauto.
     
    intros. 
@@ -5761,8 +5762,9 @@ intros.
    clear - H5.
    unfold capability_tran in *.
    simpljoin1.
-   split. Search (length(_ ++ _)).
-   rewrite app_length. rewrite app_length.
+   split. 
+   (* Search (length(_ ++ _)). *)
+   rewrite length_app. rewrite length_app.
    rewrite H. eauto.
     
    intros. 
@@ -5814,8 +5816,8 @@ intros.
    simpljoin1. *)
    exists x. right. split. eauto.
    split.
-   rewrite app_length.
-   rewrite app_length.
+   rewrite length_app.
+   rewrite length_app.
    rewrite H5. eauto.
    intros.
    eapply in_app_or in H1.
@@ -5877,7 +5879,7 @@ intros.
    unfold capability_tran in *.
    simpljoin1.
    split. 
-   rewrite app_length. rewrite app_length.
+   rewrite length_app. rewrite length_app.
    rewrite H. eauto.
     
    intros. 
@@ -5928,8 +5930,8 @@ intros.
    simpljoin1. *)
    exists x. right. split. eauto.
    split.
-   rewrite app_length.
-   rewrite app_length.
+   rewrite length_app.
+   rewrite length_app.
    rewrite H4. eauto.
    intros.
    eapply in_app_or in H1.
@@ -6181,9 +6183,9 @@ Proof.
     inversion H. 
     destruct H0. injection H0 as eq. subst.
     inversion H. exfalso;eauto.
-  + intros. eapply elem_of_list_In in H0.
+  + intros. eapply list_elem_of_In in H0.
     eapply elem_of_submseteq in H0. 2:{eauto. }
-    eexists. eapply elem_of_list_In. eauto.
+    eexists. eapply list_elem_of_In. eauto.
   + intros. simpl in H0. destruct H0. injection H0 as eq. tryfalse.
     exfalso. eauto.
   + intros. simpl in H0. destruct H0. injection H as eq. tryfalse.
@@ -6195,18 +6197,18 @@ Proof.
   + intros. simpl in H0. destruct H0. injection H0 as eq. tryfalse.
     simpl in H0. destruct H0. tryfalse.
     exfalso. eauto.
-  + intros. eapply elem_of_list_In in H0. eapply elem_of_app in H0.
+  + intros. eapply list_elem_of_In in H0. eapply elem_of_app in H0.
     destruct H0.
-    eexists. eapply elem_of_list_In. eapply elem_of_app. left.
-    eauto.  eapply elem_of_list_In in H0. eapply IHsafe_tctx_incl in H0.
+    eexists. eapply list_elem_of_In. eapply elem_of_app. left.
+    eauto.  eapply list_elem_of_In in H0. eapply IHsafe_tctx_incl in H0.
     destruct H0.
-    eexists. eapply elem_of_list_In. eapply elem_of_app. right. eapply elem_of_list_In in H0.  eauto.
-  + intros. eapply elem_of_list_In in H0. eapply elem_of_app in H0.
+    eexists. eapply list_elem_of_In. eapply elem_of_app. right. eapply list_elem_of_In in H0.  eauto.
+  + intros. eapply list_elem_of_In in H0. eapply elem_of_app in H0.
     destruct H0.
-    eapply elem_of_list_In in H0. eapply IHsafe_tctx_incl in H0.
+    eapply list_elem_of_In in H0. eapply IHsafe_tctx_incl in H0.
     destruct H0.
-    eexists. eapply elem_of_list_In. eapply elem_of_app. left. eapply elem_of_list_In in H0.  eauto.
-    eexists. eapply elem_of_list_In. eapply elem_of_app. right. eauto.
+    eexists. eapply list_elem_of_In. eapply elem_of_app. left. eapply list_elem_of_In in H0.  eauto.
+    eexists. eapply list_elem_of_In. eapply elem_of_app. right. eauto.
   + intros. eapply IHsafe_tctx_incl2 in H1. destruct H1.
     eapply IHsafe_tctx_incl1 in H1. destruct H1.
     eexists. eauto.
@@ -6455,7 +6457,7 @@ Proof.
     eapply safe_subtyping_own_ptr in H. do 2 destruct H.
     subst. injection H1 as eq. subst.
     do 3 eexists. split; eauto.  
-    eapply elem_of_list_In. eapply elem_of_list_singleton.
+    eapply list_elem_of_In. eapply list_elem_of_singleton.
     eapply safe_subtyping_own_size_eq in H3. subst. eauto.
     simpl in H0. exfalso. eauto.
     split.
@@ -6467,7 +6469,7 @@ Proof.
     subst. injection H1 as eq. subst.
     right. 
     do 4 eexists. eauto. 
-    eapply elem_of_list_In. eapply elem_of_list_singleton. auto.
+    eapply list_elem_of_In. eapply list_elem_of_singleton. auto.
     assert(~In tctx_elt0 []) by eapply in_nil. tryfalse.
     unfold capability_not_add_part3'.
     intros. apply in_inv in H0. destruct H0. subst.
@@ -6477,7 +6479,7 @@ Proof.
     injection H1 as eq;subst.
     left. do 3 eexists.
     split ;eauto.
-    eapply elem_of_list_In. eapply elem_of_list_singleton.
+    eapply list_elem_of_In. eapply list_elem_of_singleton.
     eauto.
     simpl in H0. exfalso. eauto.
   - split. 
@@ -6518,8 +6520,8 @@ Proof.
     unfold capability_not_add_part1'. intros.
     apply in_inv in H2; destruct H2.  subst. (* left. *) 
     exists ty. exists (p ◁ own_ptr n ty). 
-    split. auto. rewrite H. eapply elem_of_list_In.
-    eapply elem_of_list_here. 
+    split. auto. rewrite H. eapply list_elem_of_In.
+    eapply list_elem_of_here. 
     destruct ty;simpl; eauto. eauto.
     split.  
     generalize dependent T2. induction T1.  intros. 
@@ -6536,9 +6538,9 @@ Proof.
     apply in_inv in H2; destruct H2.  subst.
     right. 
     exists k. exists ty. exists (p ◁ &uniq{k} ty). 
-    split. auto. eapply elem_of_list_In.
+    split. auto. eapply list_elem_of_In.
     rewrite H.
-    eapply elem_of_list_here.
+    eapply list_elem_of_here.
     subst. eapply H1 in H2.
     destruct H2. eauto. simpljoin1.
     left. do 3 eexists. split;eauto.
@@ -6558,9 +6560,9 @@ Proof.
     apply in_inv in H2; destruct H2.  subst.
     left. 
     exists k. exists ty. exists (p ◁ &shr{k} ty). 
-    split. auto. eapply elem_of_list_In.
+    split. auto. eapply list_elem_of_In.
     rewrite H.
-    eapply elem_of_list_here.
+    eapply list_elem_of_here.
     subst. eapply H1 in H2.
     destruct H2. eauto. simpljoin1.
     left. do 3 eexists. split;eauto.
