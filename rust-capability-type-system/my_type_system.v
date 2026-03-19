@@ -523,6 +523,9 @@ Notation "e1 <-{ n ',Σ' i } ! e2" :=
   (at level 80, n, i at next level,
    format "e1  <-{ n ,Σ  i }  ! e2").
 
+
+Set Warnings "-notation-overridden".
+
 Notation "e1 - e2" := (BinOp MinusOp e1%E e2%E)
   (at level 50, left associativity) .
 Notation "e1 ≤ e2" := (BinOp LeOp e1%E e2%E)
