@@ -2,6 +2,8 @@
 
 `my_type_system.v` : formalization of the Rust capability type system including the proof of capability validity and capability unforgeability.
 
+`soundness.v` : soundness proof of the Rust capability type system.
+
 ## Installation
 
 ### Requirement
@@ -12,17 +14,17 @@
 
 Guide for preparing the environment:
 
-1. Install opam, Rocq Prover
+1. Install opam
 2. Install the lambda-rust library (https://gitlab.mpi-sws.org/iris/lambda-rust)
 3. In the root of lambda-rust project installed, run the following command :
 ```
-# opam pin add coq-lambda-rust
+  opam pin add coq-lambda-rust
 ```
 
 ## Verification
 
 Run the following command in the current folder:
 ```
-# eval $(opam env)
-# make
+  eval $(opam env)
+  make
 ```

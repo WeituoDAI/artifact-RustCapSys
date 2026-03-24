@@ -355,12 +355,6 @@ Inductive safe_tctx_incl : elctx -> llctx -> tctx -> tctx -> Prop :=
  | contains_tctx_incl : forall E L T1 T2,
    (*C_WEAKEN?*)        T1 ⊆+ T2 ->
                         safe_tctx_incl E L T2 T1
-(*  | tctx_split_own_prod : forall E L n tyl p ,
-   (*C_SPLIT_OWM*)      safe_tctx_incl E L [p ◁ own_ptr n $ product tyl] (hasty_ptr_offsets p (own_ptr n) tyl 0)
- | tctx_merge_own_prod : forall E L n tyl ,
-   (*C_SPLIT_OWM*)      tyl ≠ [] ->
-                        forall p, safe_tctx_incl E L (hasty_ptr_offsets p (own_ptr n) tyl 0)
-                   [p ◁ own_ptr n $ product tyl] *)
  | tctx_share_type :  forall E L p κ ty ,
    (*C_SHARE*)          safe_lifetime_lalive E L κ -> 
                         safe_tctx_incl E L [p ◁ &uniq{κ}ty] [p ◁ &shr{κ}ty]
@@ -378,20 +372,6 @@ Inductive safe_tctx_incl : elctx -> llctx -> tctx -> tctx -> Prop :=
  | tctx_incl_frame_r : forall E L T T1 T2 ,
    (*C_FRAME*)          safe_tctx_incl E L T1 T2 ->
                         safe_tctx_incl E L (T1++T) (T2++T)
-(*  | tctx_split_uniq_prod : forall E L κ tyl p ,
-   (*C_SPLIT_BOR*)      safe_tctx_incl E L [p ◁ &uniq{κ}(product tyl)]
-                  (hasty_ptr_offsets p (uniq_bor κ) tyl 0)
- | tctx_merge_uniq_prod : forall E L κ tyl ,
-   (*C_SPLIT_BOR*)       tyl ≠ [] ->
-                         forall p, safe_tctx_incl E L (hasty_ptr_offsets p (uniq_bor κ) tyl 0)
-                   [p ◁ &uniq{κ}(product tyl)]
- | tctx_split_shr_prod : forall E L κ tyl p ,
-   (*C_SPLIT_BOR*)      safe_tctx_incl E L [p ◁ &shr{κ}(product tyl)]
-                  (hasty_ptr_offsets p (shr_bor κ) tyl 0)
- | tctx_merge_shr_prod : forall E L κ tyl ,
-   (*C_SPLIT_BOR*)       tyl ≠ [] ->
-                         forall p, safe_tctx_incl E L (hasty_ptr_offsets p (shr_bor κ) tyl 0)
-                   [p ◁ &shr{κ}(product tyl)] *)
  | tctx_incl_tran : forall E L T1 T2 T3,
                     safe_tctx_incl E L T1 T2 ->
                     safe_tctx_incl E L T2 T3 ->
@@ -443,6 +423,7 @@ Inductive safe_cctx_incl : elctx -> cctx -> cctx -> Prop :=
   | cctx_incl_cons : forall E k L n (T1 T2 : list val → tctx) C1 C2,
                      safe_cctx_incl E C1 C2 -> 
                      (∀ args, safe_tctx_incl E L (T2 args) (T1 args)) →
+                     (* diff 2 *)
                      safe_cctx_incl E (k ◁cont(L, n , T1) :: C1) (k ◁cont(L, n, T2) :: C2).
 
 Inductive safe_wr :  wr ->  elctx -> llctx -> type -> type -> type -> Prop :=
@@ -553,23 +534,8 @@ Notation "'call:' f args → k" := (f (@cons expr (λ: ["_r"], k ["_r"]) args))%
 Notation "'if:' e1 'then' e2 'else' e3" := (If e1%E e2%E e3%E)
   (only parsing, at level 102, e1, e2, e3 at level 150).
 
-(* Notation "'rec:' f xl := e" := (locked (RecV f%binder xl%binder e%E))
-  (at level 102, f, xl at level 1, e at level 200).
-Notation "'fnrec:' f xl := e" := (rec: f (BNamed "return"::xl) := e)%V
-  (at level 102, f, xl at level 1, e at level 200).
-Notation "'fn:' xl := e" := (fnrec: <> xl := e)%V
-  (at level 102, xl at level 1, e at level 200).  *)
-
 Definition box ty := own_ptr (my_type_system.size ty) ty.
 
-(*  Lemma a: forall argsb e a, ((locked (RecV <>%binder (BNamed "return"::argsb)%binder e%E))) = a.
-intros.
-Check (fn: argsb := e).
-  destruct (Rec <>%binder (BNamed "return"::argsb)%binder e%E). (fn: argsb := e).
-  simpl. 
-
-(locked (RecV <>%binder (BNamed "return"::argsb)%binder e%E))
- *)
                     
 Inductive safe_type_Ins : elctx -> llctx -> tctx -> expr -> (val -> tctx) -> Prop :=
  | type_int_instr : forall E L z , 
